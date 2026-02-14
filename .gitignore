@@ -6,3 +6,5 @@ __pycache__/
 venv/
 dataset/
 checkpoints/
+testing_dataset/
+test_predictions/
