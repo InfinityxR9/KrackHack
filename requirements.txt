@@ -1,6 +1,11 @@
 streamlit
 torch --index-url https://download.pytorch.org/whl/cpu
+torchvision --index-url https://download.pytorch.org/whl/cpu
 numpy
 opencv-python-headless
 Pillow
+albumentations
+segmentation-models-pytorch
 transformers
+matplotlib
+tqdm
