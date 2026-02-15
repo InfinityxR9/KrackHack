@@ -31,7 +31,6 @@ Upload an image and get real-time semantic segmentation predictions!
   * [Testing / Evaluation](#testing--evaluation)
   * [Using the Interactive Demo](#using-the-interactive-demo)
 * [Scripts Folder Organization](#scripts-folder-organization)
-* [Modular Code Structure](#modular-code-structure)
 * [Pretrained Models](#pretrained-models)
 * [Reports & Documentation](#reports--documentation)
 * [Tech Stack](#tech-stack)
@@ -57,12 +56,9 @@ All experiments, results, and reasoning are documented in the reports included i
 
 ## 📁 Repository Structure
 
-### New Modular Architecture
-
 ```
 KrackHack/
 ├── README.md                          # Original README (legacy, for reference)
-├── MODULAR_SETUP_README.md            # THIS FILE - Judges should read this
 ├── PIPELINE_MODULES_README.md         # Technical documentation of modules
 ├── requirements.txt                   # Python dependencies
 ├── run.txt                            # CUDA install commands
@@ -406,37 +402,6 @@ app.py                              # Streamlit web app (in root folder)
 cd scripts
 python main_integration.py
 ```
-
----
-
-## 📚 Modular Code Structure
-
-Each file handles ONE responsibility:
-
-| Module | Purpose |
-|--------|---------|
-| `01_imports_setup.py` | Device detection, imports |
-| `02_global_config.py` | Hyperparameters, paths |
-| `03_class_id_mapping.py` | Class ID remapping (100,200,... → 0,1,...) |
-| `04_dataset_class.py` | `SegmentationDataset` class |
-| `05_data_augmentation.py` | Albumentations transformations |
-| `06_dataloaders.py` | PyTorch DataLoaders |
-| `07_model_definition.py` | `SegFormerWrapper` model |
-| `08_loss_functions.py` | `DiceFocalLoss` |
-| `09_metrics.py` | `MulticlassIoU` metric |
-| `10_training_loop.py` | `train_one_epoch()` |
-| `11_validation_loop.py` | `validate()` |
-| `12_training_execution.py` | Full training pipeline |
-| `13_visualization_inference.py` | Inference + visualization |
-| `14a-14d_test_*.py` | Testing components |
-
-**Benefits:**
-- ✅ Easy to modify individual components
-- ✅ Clear separation of concerns
-- ✅ Reusable across projects
-- ✅ Better for debugging
-
-See `PIPELINE_MODULES_README.md` for detailed module documentation.
 
 ---
 
