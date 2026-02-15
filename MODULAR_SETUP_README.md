@@ -30,6 +30,7 @@ Upload an image and get real-time semantic segmentation predictions!
   * [Training](#training)
   * [Testing / Evaluation](#testing--evaluation)
   * [Using the Interactive Demo](#using-the-interactive-demo)
+* [Scripts Folder Organization](#scripts-folder-organization)
 * [Modular Code Structure](#modular-code-structure)
 * [Pretrained Models](#pretrained-models)
 * [Reports & Documentation](#reports--documentation)
@@ -65,29 +66,29 @@ KrackHack/
 ├── PIPELINE_MODULES_README.md         # Technical documentation of modules
 ├── requirements.txt                   # Python dependencies
 ├── run.txt                            # CUDA install commands
-│
-├── 01_imports_setup.py                # 1. Imports & Environment Setup
-├── 02_global_config.py                # 2. Global Configuration
-├── 03_class_id_mapping.py             # 3. Class ID Mapping
-├── 04_dataset_class.py                # 4. Dataset Class
-├── 05_data_augmentation.py            # 5. Data Augmentation
-├── 06_dataloaders.py                  # 6. DataLoaders
-├── 07_model_definition.py             # 7. Model Definition (SegFormer)
-├── 08_loss_functions.py               # 8. Loss Functions (Dice + Focal)
-├── 09_metrics.py                      # 9. Metrics (IoU)
-├── 10_training_loop.py                # 10. Training Loop
-├── 11_validation_loop.py              # 11. Validation Loop
-├── 12_training_execution.py           # 12. Training Execution (Main)
-├── 13_visualization_inference.py      # 13. Visualization & Inference
-├── 14a_test_dataset_loading.py        # 14A. Test Dataset Loading
-├── 14b_test_model_loading.py          # 14B. Test Model Loading
-├── 14c_test_evaluation.py             # 14C. Test Evaluation
-├── 14d_test_visualization.py          # 14D. Test Visualization
-│
-├── main_integration.py                # Complete training script (recommended entry point)
-├── test_integration.py                # Complete testing script
-├── app.py                             # Streamlit deployment app
 ├── pipeline.ipynb                     # Original notebook (NOT REQUIRED - for reference only)
+│
+├── scripts/                           # All Python modules organized in one folder
+│   ├── 01_imports_setup.py            # 1. Imports & Environment Setup
+│   ├── 02_global_config.py            # 2. Global Configuration
+│   ├── 03_class_id_mapping.py         # 3. Class ID Mapping
+│   ├── 04_dataset_class.py            # 4. Dataset Class
+│   ├── 05_data_augmentation.py        # 5. Data Augmentation
+│   ├── 06_dataloaders.py              # 6. DataLoaders
+│   ├── 07_model_definition.py         # 7. Model Definition (SegFormer)
+│   ├── 08_loss_functions.py           # 8. Loss Functions (Dice + Focal)
+│   ├── 09_metrics.py                  # 9. Metrics (IoU)
+│   ├── 10_training_loop.py            # 10. Training Loop
+│   ├── 11_validation_loop.py          # 11. Validation Loop
+│   ├── 12_training_execution.py       # 12. Training Execution (Main)
+│   ├── 13_visualization_inference.py  # 13. Visualization & Inference
+│   ├── 14a_test_dataset_loading.py    # 14A. Test Dataset Loading
+│   ├── 14b_test_model_loading.py      # 14B. Test Model Loading
+│   ├── 14c_test_evaluation.py         # 14C. Test Evaluation
+│   ├── 14d_test_visualization.py      # 14D. Test Visualization
+│   ├── main_integration.py            # ⭐ Main training entry point
+│   ├── test_integration.py            # ⭐ Main testing entry point
+│   └── app.py                         # Streamlit deployment app
 │
 ├── dataset/                           # Training + validation dataset 
 │   ├── train/
@@ -153,6 +154,9 @@ testing_dataset/
 
 ```bash
 cd c:\Users\iamda\Desktop\KrackHack\KrackHack
+
+# Verify scripts folder exists
+ls scripts/  # Should show all Python modules
 ```
 
 ### 2. Create a Virtual Environment
@@ -206,6 +210,7 @@ python -c "import torch; print(f'PyTorch: {torch.__version__}'); print(f'CUDA Av
 #### Option A: Recommended — Use Integration Script
 
 ```bash
+cd scripts
 python main_integration.py
 ```
 
@@ -239,9 +244,12 @@ Training complete! Best mIoU: 0.7456
 
 #### Option B: Manual Step-by-Step (For Debugging)
 
-If you want to run components individually:
+If you want to run components individually from Python:
 
 ```python
+import sys
+sys.path.insert(0, 'scripts')
+
 # 1. Setup
 from imports_setup import device
 from global_config import NUM_CLASSES, EPOCHS, ENCODER_LR, DECODER_LR, WEIGHT_DECAY, WARMUP_EPOCHS, CLASS_IDS, SAVE_DIR
@@ -276,6 +284,7 @@ history, best_miou = run_training(
 #### Option A: Recommended — Use Test Integration Script
 
 ```bash
+cd scripts
 python test_integration.py
 ```
 
@@ -316,9 +325,14 @@ Overall TEST mIoU (valid classes only): 0.6234
 #### Option B: Using Evaluation Components Directly
 
 ```python
+import sys
+sys.path.insert(0, 'scripts')
+
 from test_dataset_loading import create_test_loader
 from test_model_loading import load_model_for_testing
 from test_evaluation import evaluate_on_test
+from imports_setup import device
+from global_config import NUM_CLASSES
 
 test_loader, test_dataset = create_test_loader("testing_dataset")
 model = load_model_for_testing(device, "checkpoints/best_model.pth")
@@ -342,6 +356,7 @@ Upload an off-road image and get instant segmentation results with class predict
 If you want to run the Streamlit app on your machine:
 
 ```bash
+cd scripts
 streamlit run app.py
 ```
 
@@ -353,6 +368,43 @@ Then open `http://localhost:8501` in your browser.
 - 🎨 Color-coded class predictions
 - 📊 Per-class confidence scores
 - 💾 Download results as PNG
+
+---
+
+## 📚 Scripts Folder Organization
+
+All Python modules are organized in the **`scripts/`** folder for clean project structure:
+
+```
+scripts/
+├── 01_imports_setup.py             # Device & imports
+├── 02_global_config.py             # Hyperparameters & paths
+├── 03_class_id_mapping.py          # Class remapping utilities
+├── 04_dataset_class.py             # Dataset class
+├── 05_data_augmentation.py         # Augmentations
+├── 06_dataloaders.py               # DataLoaders
+├── 07_model_definition.py          # SegFormer model
+├── 08_loss_functions.py            # Loss functions
+├── 09_metrics.py                   # Metrics
+├── 10_training_loop.py             # Training loop
+├── 11_validation_loop.py           # Validation loop
+├── 12_training_execution.py        # Full training pipeline
+├── 13_visualization_inference.py   # Inference utilities
+├── 14a_test_dataset_loading.py     # Test data loader
+├── 14b_test_model_loading.py       # Model loader
+├── 14c_test_evaluation.py          # Evaluation metrics
+├── 14d_test_visualization.py       # Test visualization
+├── main_integration.py             # ⭐ Main training entry point
+├── test_integration.py             # ⭐ Main testing entry point
+└── app.py                          # Streamlit web app
+```
+
+**To run scripts:** Navigate to the `scripts/` folder first:
+
+```bash
+cd scripts
+python main_integration.py
+```
 
 ---
 
@@ -397,6 +449,7 @@ Final trained checkpoints available here:
 
 ```bash
 # Download best_model.pth and place in checkpoints/
+cd scripts
 python test_integration.py
 ```
 
@@ -494,11 +547,28 @@ All technical details, architectural decisions, and analyses:
 
 1. Download datasets (links above)
 2. Install dependencies (`requirements.txt` + `run.txt`)
-3. Run `python main_integration.py`
+3. Run `cd scripts && python main_integration.py`
 4. Compare plots to `training_curves.png`
-5. Run `python test_integration.py` for blind test evaluation
+5. Run `cd scripts && python test_integration.py` for blind test evaluation
 
 ### If Something Doesn't Work
+
+<details>
+<summary><b>Scripts Not Found / Import Errors</b></summary>
+
+Make sure you're in the correct directory:
+
+```bash
+# Navigate to scripts folder
+cd scripts
+
+# Then run the script
+python main_integration.py
+```
+
+If running from parent directory, ensure `scripts/` is in your Python path.
+
+</details>
 
 <details>
 <summary><b>CUDA/GPU Issues</b></summary>
@@ -515,7 +585,7 @@ python -c "import torch; print(torch.cuda.is_available())"
 <details>
 <summary><b>Out of Memory (OOM)</b></summary>
 
-Edit `02_global_config.py`:
+Edit `scripts/02_global_config.py`:
 ```python
 BATCH_SIZE = 2  # Reduce from 4
 SEGFORMER_VARIANT = "nvidia/segformer-b1-finetuned-ade-512-512"  # Use B1 instead of B2
@@ -526,14 +596,19 @@ SEGFORMER_VARIANT = "nvidia/segformer-b1-finetuned-ade-512-512"  # Use B1 instea
 <details>
 <summary><b>Dataset Not Found</b></summary>
 
-Verify paths in `02_global_config.py`:
+Verify paths in `scripts/02_global_config.py`:
 ```python
-DATA_ROOT = "dataset"  # Should be in repo root
+DATA_ROOT = "../dataset"  # Path from scripts folder to parent
 ```
 
-Check directory structure:
+Check directory structure from repo root:
 ```bash
 ls dataset/train/Color_Images/  # Should show images
+```
+
+Or from scripts folder:
+```bash
+ls ../dataset/train/Color_Images/  # Should show images
 ```
 
 </details>
@@ -541,7 +616,7 @@ ls dataset/train/Color_Images/  # Should show images
 <details>
 <summary><b>Model Checkpoint Not Found</b></summary>
 
-Download from Google Drive link above, place in `checkpoints/` folder:
+Download from Google Drive link above, place in `checkpoints/` folder at repo root:
 ```
 checkpoints/
 ├── best_model.pth
@@ -559,8 +634,8 @@ checkpoints/
 - [ ] Install `requirements.txt`
 - [ ] Install PyTorch from `run.txt`
 - [ ] Download datasets (training + testing)
-- [ ] Run `python main_integration.py` to train
-- [ ] Run `python test_integration.py` to evaluate
+- [ ] `cd scripts` and run `python main_integration.py` to train
+- [ ] `cd scripts` and run `python test_integration.py` to evaluate
 - [ ] Visit [Streamlit app](https://krackhack-inf.streamlit.app/) for live demo
 
 ---
