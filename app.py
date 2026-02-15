@@ -16,33 +16,33 @@ NUM_CLASSES = 10
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # --------------------------------------------------
-# Color Palette (10 Classes)
+# Color Palette (Mapped exactly to KrackHack PDF)
 # --------------------------------------------------
 
 CLASS_COLORS = {
-    0: (0, 0, 0),          # Background
-    1: (128, 64, 128),     # Road
-    2: (244, 35, 232),     # Sand
-    3: (70, 70, 70),       # Rock
-    4: (102, 102, 156),    # Vegetation
-    5: (190, 153, 153),    # Sky
-    6: (153, 153, 153),    # Vehicle
-    7: (250, 170, 30),     # Human
-    8: (220, 220, 0),      # Obstacle
-    9: (107, 142, 35),     # Terrain
+    0: (34, 139, 34),     # Trees (Forest Green)
+    1: (0, 255, 0),       # Lush Bushes (Lime)
+    2: (189, 183, 107),   # Dry Grass (Dark Khaki)
+    3: (139, 69, 19),     # Dry Bushes (Saddle Brown)
+    4: (128, 128, 128),   # Ground Clutter (Gray)
+    5: (255, 20, 147),    # Flowers (Deep Pink)
+    6: (160, 82, 45),     # Logs (Sienna)
+    7: (220, 20, 60),     # Rocks (Crimson)
+    8: (244, 164, 96),    # Landscape/Sand (Sandy Brown)
+    9: (135, 206, 235),   # Sky (Sky Blue)
 }
 
 CLASS_NAMES = {
-    0: "Background",
-    1: "Road",
-    2: "Sand",
-    3: "Rock",
-    4: "Vegetation",
-    5: "Sky",
-    6: "Vehicle",
-    7: "Human",
-    8: "Obstacle",
-    9: "Terrain",
+    0: "Trees",
+    1: "Lush Bushes",
+    2: "Dry Grass",
+    3: "Dry Bushes",
+    4: "Ground Clutter",
+    5: "Flowers",
+    6: "Logs",
+    7: "Rocks",
+    8: "Landscape (Sand)",
+    9: "Sky",
 }
 
 # --------------------------------------------------
@@ -99,8 +99,8 @@ def decode_segmentation(mask):
 # --------------------------------------------------
 
 st.set_page_config(layout="wide")
-st.title("🏜️ Off-Road Desert Semantic Segmentation (SegFormer-B1)")
-st.write("Upload a desert image to perform semantic segmentation.")
+st.title("🏜️ Off-Road Desert Semantic Segmentation")
+st.write("Upload a desert image to perform semantic segmentation. Classes are mapped strictly to Team HyperBool's custom dataset.")
 
 uploaded_file = st.file_uploader("Upload JPG/PNG Image", type=["jpg", "jpeg", "png"])
 
@@ -111,57 +111,52 @@ if uploaded_file:
     # --------------------------
     # Load & Resize Image
     # --------------------------
-
     image = Image.open(uploaded_file).convert("RGB")
-
-    # Resize to 512x512 (Model Input Size)
-    image = image.resize((512, 512))
-
+    image = image.resize((512, 512)) # Model Input Size
     image_np = np.array(image)
 
     # --------------------------
-    # Preprocess (No Resize Again)
+    # Preprocess
     # --------------------------
-
     inputs = processor(
         images=image,
         return_tensors="pt",
         do_resize=False
     )
-
     pixel_values = inputs["pixel_values"].to(DEVICE)
 
     # --------------------------
     # Inference
     # --------------------------
-
     with torch.no_grad():
         outputs = model(pixel_values)
         predictions = torch.argmax(outputs, dim=1)
         predicted_mask = predictions.squeeze().cpu().numpy()
 
     # --------------------------
-    # Colorize Mask
+    # Colorize & Overlay
     # --------------------------
-
     color_mask = decode_segmentation(predicted_mask)
+    overlay = cv2.addWeighted(image_np, 0.6, color_mask, 0.4, 0)
 
     # --------------------------
-    # Overlay using OpenCV
+    # Calculate Percentages
     # --------------------------
-
-    overlay = cv2.addWeighted(
-        image_np,
-        0.6,
-        color_mask,
-        0.4,
-        0
-    )
+    total_pixels = predicted_mask.size
+    class_percentages = {}
+    
+    for class_id, name in CLASS_NAMES.items():
+        pixel_count = np.sum(predicted_mask == class_id)
+        if pixel_count > 0:
+            pct = (pixel_count / total_pixels) * 100
+            class_percentages[name] = pct
+            
+    # Sort from highest percentage to lowest
+    sorted_percentages = sorted(class_percentages.items(), key=lambda x: x[1], reverse=True)
 
     # --------------------------
-    # Display Results
+    # Display Visual Results
     # --------------------------
-
     col1, col2, col3 = st.columns(3)
 
     with col1:
@@ -176,19 +171,32 @@ if uploaded_file:
         st.subheader("Overlay")
         st.image(overlay, use_column_width=True)
 
+    st.divider()
+
     # --------------------------
-    # Legend
+    # Display Percentages & Legend
     # --------------------------
+    col_metrics, col_legend = st.columns([1, 1])
 
-    st.subheader("🗺️ Class Legend")
+    with col_metrics:
+        st.subheader("📊 Terrain Composition (%)")
+        for name, pct in sorted_percentages:
+            # Display text and a visual progress bar
+            st.write(f"**{name}:** {pct:.1f}%")
+            st.progress(int(pct) if int(pct) > 0 else 1)
 
-    legend_cols = st.columns(5)
-
-    for idx, (class_id, name) in enumerate(CLASS_NAMES.items()):
-        color = CLASS_COLORS[class_id]
-        color_box = np.ones((40, 40, 3), dtype=np.uint8)
-        color_box[:] = color
-
-        with legend_cols[idx % 5]:
-            st.image(color_box, width=40)
-            st.write(name)
+    with col_legend:
+        st.subheader("🗺️ Class Legend")
+        legend_cols = st.columns(3)
+        for idx, (class_id, name) in enumerate(CLASS_NAMES.items()):
+            color = CLASS_COLORS[class_id]
+            # Convert RGB tuple to Hex for HTML styling
+            hex_color = '#%02x%02x%02x' % color
+            with legend_cols[idx % 3]:
+                st.markdown(
+                    f"<div style='display: flex; align-items: center; margin-bottom: 10px;'>"
+                    f"<div style='width: 20px; height: 20px; background-color: {hex_color}; margin-right: 10px; border-radius: 3px;'></div>"
+                    f"<span>{name}</span>"
+                    f"</div>", 
+                    unsafe_allow_html=True
+                )
