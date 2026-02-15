@@ -68,6 +68,8 @@ KrackHack/
 ├── run.txt                            # CUDA install commands
 ├── pipeline.ipynb                     # Original notebook (NOT REQUIRED - for reference only)
 │
+├── app.py                             # Streamlit deployment app (interactive demo)
+│
 ├── scripts/                           # All Python modules organized in one folder
 │   ├── 01_imports_setup.py            # 1. Imports & Environment Setup
 │   ├── 02_global_config.py            # 2. Global Configuration
@@ -87,8 +89,7 @@ KrackHack/
 │   ├── 14c_test_evaluation.py         # 14C. Test Evaluation
 │   ├── 14d_test_visualization.py      # 14D. Test Visualization
 │   ├── main_integration.py            # Complete training script (recommended entry point)
-│   ├── test_integration.py            # Complete testing script
-│   └── app.py                         # Streamlit deployment app
+│   └── test_integration.py            # Complete testing script
 │
 ├── dataset/                           # Training + validation dataset 
 │   ├── train/
@@ -356,7 +357,6 @@ Upload an off-road image and get instant segmentation results with class predict
 If you want to run the Streamlit app on your machine:
 
 ```bash
-cd scripts
 streamlit run app.py
 ```
 
@@ -395,8 +395,9 @@ scripts/
 ├── 14c_test_evaluation.py          # Evaluation metrics
 ├── 14d_test_visualization.py       # Test visualization
 ├── main_integration.py             # ⭐ Main training entry point
-├── test_integration.py             # ⭐ Main testing entry point
-└── app.py                          # Streamlit web app
+└── test_integration.py             # ⭐ Main testing entry point
+
+app.py                              # Streamlit web app (in root folder)
 ```
 
 **To run scripts:** Navigate to the `scripts/` folder first:
