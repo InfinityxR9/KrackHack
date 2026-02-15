@@ -7,17 +7,17 @@ import cv2
 from PIL import Image
 from transformers import SegformerForSemanticSegmentation, SegformerImageProcessor
 
-# -------------------------------
+# --------------------------------------------------
 # Configuration
-# -------------------------------
+# --------------------------------------------------
 
 PRETRAINED_MODEL = "nvidia/segformer-b1-finetuned-ade-512-512"
 NUM_CLASSES = 10
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-# -------------------------------
-# Color Palette (10 classes)
-# -------------------------------
+# --------------------------------------------------
+# Color Palette (10 Classes)
+# --------------------------------------------------
 
 CLASS_COLORS = {
     0: (0, 0, 0),          # Background
@@ -45,9 +45,9 @@ CLASS_NAMES = {
     9: "Terrain",
 }
 
-# -------------------------------
-# Model Wrapper (REQUIRED)
-# -------------------------------
+# --------------------------------------------------
+# Model Wrapper (Required)
+# --------------------------------------------------
 
 class SegFormerWrapper(nn.Module):
     def __init__(self, pretrained_name, num_classes):
@@ -69,9 +69,9 @@ class SegFormerWrapper(nn.Module):
         )
         return logits
 
-# -------------------------------
-# Load Model (Cached)
-# -------------------------------
+# --------------------------------------------------
+# Cached Model Loader
+# --------------------------------------------------
 
 @st.cache_resource
 def load_model():
@@ -81,9 +81,9 @@ def load_model():
     model.eval()
     return processor, model
 
-# -------------------------------
-# Mask Coloring Function
-# -------------------------------
+# --------------------------------------------------
+# Decode Mask to RGB
+# --------------------------------------------------
 
 def decode_segmentation(mask):
     h, w = mask.shape
@@ -94,9 +94,9 @@ def decode_segmentation(mask):
 
     return color_mask
 
-# -------------------------------
+# --------------------------------------------------
 # Streamlit UI
-# -------------------------------
+# --------------------------------------------------
 
 st.set_page_config(layout="wide")
 st.title("🏜️ Off-Road Desert Semantic Segmentation (SegFormer-B1)")
@@ -108,24 +108,48 @@ if uploaded_file:
 
     processor, model = load_model()
 
-    # Load Image
+    # --------------------------
+    # Load & Resize Image
+    # --------------------------
+
     image = Image.open(uploaded_file).convert("RGB")
+
+    # Resize to 512x512 (Model Input Size)
+    image = image.resize((512, 512))
+
     image_np = np.array(image)
 
-    # Preprocess
-    inputs = processor(images=image, return_tensors="pt")
+    # --------------------------
+    # Preprocess (No Resize Again)
+    # --------------------------
+
+    inputs = processor(
+        images=image,
+        return_tensors="pt",
+        do_resize=False
+    )
+
     pixel_values = inputs["pixel_values"].to(DEVICE)
 
+    # --------------------------
     # Inference
+    # --------------------------
+
     with torch.no_grad():
         outputs = model(pixel_values)
         predictions = torch.argmax(outputs, dim=1)
         predicted_mask = predictions.squeeze().cpu().numpy()
 
-    # Convert mask to color
+    # --------------------------
+    # Colorize Mask
+    # --------------------------
+
     color_mask = decode_segmentation(predicted_mask)
 
-    # Create overlay using OpenCV
+    # --------------------------
+    # Overlay using OpenCV
+    # --------------------------
+
     overlay = cv2.addWeighted(
         image_np,
         0.6,
@@ -134,11 +158,14 @@ if uploaded_file:
         0
     )
 
+    # --------------------------
     # Display Results
+    # --------------------------
+
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.subheader("Original Image")
+        st.subheader("Original (512x512)")
         st.image(image_np, use_column_width=True)
 
     with col2:
@@ -149,13 +176,14 @@ if uploaded_file:
         st.subheader("Overlay")
         st.image(overlay, use_column_width=True)
 
-    # -------------------------------
+    # --------------------------
     # Legend
-    # -------------------------------
+    # --------------------------
 
     st.subheader("🗺️ Class Legend")
 
     legend_cols = st.columns(5)
+
     for idx, (class_id, name) in enumerate(CLASS_NAMES.items()):
         color = CLASS_COLORS[class_id]
         color_box = np.ones((40, 40, 3), dtype=np.uint8)
