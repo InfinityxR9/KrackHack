@@ -150,7 +150,7 @@ testing_dataset/
 ### 1. Clone or Download Repository
 
 ```bash
-cd c:\Users\iamda\Desktop\KrackHack\KrackHack
+git clone https://github.com/InfinityxR9/KrackHack.git
 
 # Verify scripts folder exists
 ls scripts/  # Should show all Python modules
